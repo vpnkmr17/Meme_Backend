@@ -6,9 +6,9 @@ from django.conf import settings
 class MemeCreateserializer(serializers.ModelSerializer):
     class Meta:
         model=Post
-        fields=['id','user','caption','URL','timestamp']
+        fields=['id','name','caption','url','timestamp']
         
 class MemeSerializer(serializers.ModelSerializer):
     class Meta:
         model=Post
-        fields=['id','user','caption','URL']
+        fields=['id','name','caption','url']

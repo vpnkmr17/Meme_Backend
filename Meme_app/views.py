@@ -14,28 +14,31 @@ from datetime import datetime
 # Here i have sorted the list of memes by timestamp so that
 # i can get the latest memes first
 # URL:http://127.0.0.1:8000/memes/
-@api_view(['GET'])
-def meme_list_view(request,*args,**kwargs):
-    # obj=Post.objects.all()
-    obj=Post.objects.order_by('-timestamp')
-    serializer=MemeSerializer(obj,many=True)
-    return Response(serializer.data)
+@api_view(['GET','POST'])
+def meme_generic_view(request,*args,**kwargs):
+    if request.method=='GET':
+        obj=Post.objects.order_by('-timestamp')
+        serializer=MemeSerializer(obj,many=True)
+        return Response(serializer.data)
+    elif request.method=='POST':
+        data=request.data or None
+        serializer=MemeCreateserializer(data=data)
 
-# This api is used for uploading memes from the frontend side
-# URL:http://127.0.0.1:8000/memes/create
-@api_view(['POST'])
-def meme_create_view(request):
-    # print("request.data is ",request.data)
-    data=request.data or None
-    # print("data is ",data)
-    serializer=MemeCreateserializer(data=data)
-    # serializer=MemeCreateserializer(serializer,data={'image':im},partial=True)
-    print(serializer)
-    if serializer.is_valid(raise_exception=True):
-        serializer.save()
-        print(serializer)
-        return Response(serializer.data,status=201)
-    return Response({"error":"not sended"},status=400)
+        if serializer.is_valid(raise_exception=True):
+            caption=serializer.validated_data['caption']
+            url=serializer.validated_data['url']
+            user=serializer.validated_data['name']
+            caption_check=Post.objects.filter(caption=caption)
+            url_check=Post.objects.filter(url=url)
+            user_check=Post.objects.filter(name=user)
+            if (not caption_check) and (not user_check) and (not url_check):
+                serializer.save()
+                return Response(serializer.data,status=201)
+            else:
+                return Response({"error":"Meme already exists!"},status=409)
+        return Response({"error":"not sended"},status=400)
+
+
 
 # This Api is used to update the memes
 # Here i am also updating the timestamp so that the
